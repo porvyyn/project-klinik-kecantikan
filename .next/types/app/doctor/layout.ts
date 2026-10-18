@@ -1,4 +1,4 @@
-// File: D:\klinik kecantikan\app\doctor\layout.tsx
+// File: C:\DATA INDAH\project-klinik-kecantikan\app\doctor\layout.tsx
 import * as entry from '../../../../app/doctor/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

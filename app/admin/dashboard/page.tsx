@@ -30,7 +30,7 @@ export default function AdminDashboardPage() {
             <span>Operasional Klinik Berjalan Optimal</span>
           </div>
           <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">
-            Selamat Datang di Portal Utama GlowAura
+            Selamat Datang di Portal Utama Veloura
           </h2>
           <p className="mt-2 text-white/90 text-sm leading-relaxed">
             Kelola operasional klinik kecantikan Anda dengan mudah. Pantau antrean secara real-time, atur rotasi jadwal dokter, dan pastikan pasien mendapatkan pengalaman perawatan estetika terbaik.

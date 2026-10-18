@@ -5,9 +5,91 @@ import { Volume2, Play, CheckCircle, Clock, Sparkles } from "lucide-react";
 import { DataTable, Column } from "@/components/DataTable";
 import { initialQueues, QueueItem } from "@/lib/mockData";
 
+// Chime notification sound using browser Web Audio API
+const playChimeSound = (): Promise<void> => {
+  return new Promise((resolve) => {
+    try {
+      if (typeof window === "undefined") {
+        resolve();
+        return;
+      }
+      const AudioCtx =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (!AudioCtx) {
+        resolve();
+        return;
+      }
+      const ctx = new AudioCtx();
+      if (ctx.state === "suspended") {
+        ctx.resume();
+      }
+
+      const now = ctx.currentTime;
+
+      // Tone 1: 587.33 Hz (D5)
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      osc1.type = "sine";
+      osc1.frequency.setValueAtTime(587.33, now);
+      gain1.gain.setValueAtTime(0.2, now);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+      osc1.connect(gain1);
+      gain1.connect(ctx.destination);
+      osc1.start(now);
+      osc1.stop(now + 0.35);
+
+      // Tone 2: 880.00 Hz (A5)
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = "sine";
+      osc2.frequency.setValueAtTime(880, now + 0.22);
+      gain2.gain.setValueAtTime(0.25, now + 0.22);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.75);
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.start(now + 0.22);
+      osc2.stop(now + 0.75);
+
+      setTimeout(() => {
+        resolve();
+      }, 700);
+    } catch {
+      resolve();
+    }
+  });
+};
+
+// Speech announcement using Web Speech API (speechSynthesis)
+const speakAnnouncement = (text: string) => {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+    return;
+  }
+
+  // Cancel any ongoing speech
+  window.speechSynthesis.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "id-ID";
+  utterance.rate = 0.92;
+  utterance.pitch = 1.05;
+
+  // Prefer Indonesian voice if available in browser
+  const voices = window.speechSynthesis.getVoices();
+  const idVoice = voices.find(
+    (v) => v.lang.startsWith("id") || v.lang.includes("ID")
+  );
+  if (idVoice) {
+    utterance.voice = idVoice;
+  }
+
+  window.speechSynthesis.speak(utterance);
+};
+
 export default function AdminQueuePage() {
   const [queues, setQueues] = useState<QueueItem[]>(initialQueues);
   const [activeCallMessage, setActiveCallMessage] = useState<string | null>(null);
+  const [callingId, setCallingId] = useState<string | null>(null);
 
   // Status updates
   const handleUpdateStatus = (id: string, newStatus: QueueItem["status"]) => {
@@ -16,12 +98,22 @@ export default function AdminQueuePage() {
     );
   };
 
-  // Announce / Call patient
-  const handleCallPatient = (queue: QueueItem) => {
-    setActiveCallMessage(`Nomor Antrean ${queue.queueNumber}: ${queue.patientName} dipersilakan menuju ${queue.room}`);
+  // Announce / Call patient with Chime & Speech Synthesis
+  const handleCallPatient = async (queue: QueueItem) => {
+    const announcementText = `Nomor antrean ${queue.queueNumber}, ${queue.patientName} dipersilakan menuju ${queue.room}`;
+    setActiveCallMessage(announcementText);
+    setCallingId(queue.id);
+
+    // 1. Putar efek nada lonceng klinik (Web Audio API)
+    await playChimeSound();
+
+    // 2. Bacakan panggilan suara otomatis (Web Speech API)
+    speakAnnouncement(announcementText);
+
     setTimeout(() => {
       setActiveCallMessage(null);
-    }, 4000);
+      setCallingId(null);
+    }, 5500);
   };
 
   const columns: Column<QueueItem>[] = [
@@ -86,13 +178,17 @@ export default function AdminQueuePage() {
       header: "Aksi Antrean",
       cell: (item) => (
         <div className="flex items-center gap-2">
-          {/* Panggil */}
+          {/* Panggil dengan audio pengeras suara */}
           <button
             onClick={() => handleCallPatient(item)}
             title="Panggil Pasien Melalui Pengeras Suara"
-            className="p-1.5 rounded-lg border border-[#E2C0C8] text-[#DB2777] hover:bg-[#E2C0C8]/30 transition-colors"
+            className={`p-1.5 rounded-lg border transition-all ${
+              callingId === item.id
+                ? "bg-[#DB2777] text-white border-[#DB2777] shadow-md shadow-[#DB2777]/30 scale-105"
+                : "border-[#E2C0C8] text-[#DB2777] hover:bg-[#E2C0C8]/30"
+            }`}
           >
-            <Volume2 className="w-4 h-4" />
+            <Volume2 className={`w-4 h-4 ${callingId === item.id ? "animate-pulse text-white" : ""}`} />
           </button>
 
           {/* Quick status actions */}
@@ -124,13 +220,21 @@ export default function AdminQueuePage() {
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Toast Alert when calling patient */}
       {activeCallMessage && (
-        <div className="p-4 rounded-2xl bg-[#DB2777] text-white shadow-lg flex items-center justify-between animate-bounce">
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-[#DB2777] to-[#BE185D] text-white shadow-xl flex items-center justify-between border border-pink-400/30">
           <div className="flex items-center gap-3">
-            <Volume2 className="w-5 h-5 text-white animate-pulse" />
-            <span className="font-bold text-sm">{activeCallMessage}</span>
+            <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0">
+              <Volume2 className="w-5 h-5 text-white animate-bounce" />
+            </div>
+            <div>
+              <p className="text-[10px] uppercase font-bold tracking-wider text-pink-200">
+                Panggilan Suara Pengeras Suara
+              </p>
+              <span className="font-bold text-sm tracking-tight">{activeCallMessage}</span>
+            </div>
           </div>
-          <span className="text-xs bg-white/20 px-2.5 py-1 rounded-full font-semibold">
-            Panggilan Aktif
+          <span className="text-xs bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full font-semibold flex items-center gap-1.5 shrink-0">
+            <span className="w-2 h-2 rounded-full bg-emerald-300 animate-ping" />
+            Audio Aktif
           </span>
         </div>
       )}

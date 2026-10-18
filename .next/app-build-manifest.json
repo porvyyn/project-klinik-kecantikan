@@ -1,19 +1,13 @@
 {
   "pages": {
-    "/doctor/dashboard/page": [
+    "/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/doctor/dashboard/page.js"
-    ],
-    "/doctor/layout": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/doctor/layout.js"
+      "static/chunks/app/page.js"
     ],
     "/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
     "/login/page": [
@@ -29,17 +23,29 @@
     "/admin/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
+      "static/css/app/admin/layout.css",
       "static/chunks/app/admin/layout.js"
+    ],
+    "/admin/schedules/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/admin/schedules/page.js"
     ],
     "/admin/queue/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/admin/queue/page.js"
     ],
-    "/admin/schedules/page": [
+    "/doctor/dashboard/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/admin/schedules/page.js"
+      "static/chunks/app/doctor/dashboard/page.js"
+    ],
+    "/doctor/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/doctor/layout.css",
+      "static/chunks/app/doctor/layout.js"
     ]
   }
 }

@@ -128,7 +128,7 @@ export function DataTable<T extends Record<string, any>>({
           <thead>
             <tr className="bg-[#FFF9FA] border-b border-[#E2C0C8] text-gray-600 font-bold uppercase tracking-wider text-[11px]">
               {columns.map((col, idx) => (
-                <th key={idx} className={cn("px-6 py-3.5", col.className)}>
+                <th key={idx} className={cn("px-6 py-3.5 whitespace-nowrap", col.className)}>
                   <div className="flex items-center gap-1.5">
                     <span>{col.header}</span>
                     <ArrowUpDown className="w-3 h-3 text-gray-400 opacity-60" />
@@ -145,7 +145,7 @@ export function DataTable<T extends Record<string, any>>({
                   className="hover:bg-[#E2C0C8]/15 transition-colors duration-150 group"
                 >
                   {columns.map((col, colIndex) => (
-                    <td key={colIndex} className={cn("px-6 py-4", col.className)}>
+                    <td key={colIndex} className={cn("px-6 py-4 align-middle", col.className)}>
                       {col.cell
                         ? col.cell(item)
                         : col.accessorKey
@@ -182,7 +182,7 @@ export function DataTable<T extends Record<string, any>>({
           <span className="font-bold text-gray-700">{data.length}</span> total entri
         </p>
         <span className="text-[11px] text-gray-400 font-medium">
-          GlowAura Real-time Data Sync
+          Veloura Real-time Data Sync
         </span>
       </div>
     </div>

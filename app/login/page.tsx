@@ -7,7 +7,7 @@ import { Sparkles, ShieldCheck, Stethoscope, Lock, Mail, ArrowRight, AlertCircle
 export default function LoginPage() {
   const router = useRouter();
   const [role, setRole] = useState<"admin" | "doctor">("admin");
-  const [email, setEmail] = useState("admin@glowaura.com");
+  const [email, setEmail] = useState("admin@veloura.com");
   const [password, setPassword] = useState("password123");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -16,10 +16,10 @@ export default function LoginPage() {
     setRole(newRole);
     setError(null);
     if (newRole === "admin") {
-      setEmail("admin@glowaura.com");
+      setEmail("admin@veloura.com");
       setPassword("password123");
     } else {
-      setEmail("dr.nadia@glowaura.com");
+      setEmail("dr.nadia@veloura.com");
       setPassword("dokter123");
     }
   };
@@ -71,7 +71,7 @@ export default function LoginPage() {
             <Sparkles className="w-7 h-7" />
           </div>
           <h1 className="text-2xl font-black text-gray-900 tracking-tight">
-            Glow<span className="text-[#DB2777]">Aura</span> Clinic
+            Vel<span className="text-[#DB2777]">oura</span> Clinic
           </h1>
           <p className="text-xs text-gray-500 mt-1 font-medium">
             Sistem Informasi Manajemen Klinik Kecantikan & Rekam Medis
@@ -129,7 +129,7 @@ export default function LoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="nama@glowaura.com"
+                placeholder="nama@veloura.com"
                 className="w-full pl-10 pr-4 py-2.5 text-xs rounded-xl bg-[#FFF9FA] border border-[#E2C0C8] text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#DB2777]/30 focus:border-[#DB2777] transition-all"
                 required
               />

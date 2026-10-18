@@ -89,7 +89,7 @@ export function Sidebar({ role }: SidebarProps) {
           </div>
           <div>
             <span className="font-bold text-lg tracking-tight text-gray-900 block leading-tight">
-              Glow<span className="text-[#DB2777]">Aura</span>
+              Vel<span className="text-[#DB2777]">oura</span>
             </span>
             <span className="text-xs text-[#DB2777] font-semibold tracking-wide uppercase">
               Beauty Clinic & Spa

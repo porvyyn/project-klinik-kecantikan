@@ -1,4 +1,4 @@
-// File: D:\klinik kecantikan\app\login\page.tsx
+// File: C:\DATA INDAH\project-klinik-kecantikan\app\login\page.tsx
 import * as entry from '../../../../app/login/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
