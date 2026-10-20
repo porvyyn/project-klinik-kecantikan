@@ -1,5 +1,9 @@
 {
   "node": {},
   "edge": {},
+<<<<<<< HEAD
   "encryptionKey": "HVv4BzCUKnWh4OL/LesfdBHVXmsNT7ovsfbPYCLZp3c="
+=======
+  "encryptionKey": "Fnfg5h0dt0IfLpFe7TauKA/DJK72/vF84bWhekzkoNA="
+>>>>>>> eb13c06 (Sudah terhubung ke BE dan DB)
 }

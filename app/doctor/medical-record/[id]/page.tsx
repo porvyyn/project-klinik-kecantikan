@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import {
@@ -11,11 +11,10 @@ import {
   User,
   ShieldAlert,
   Sparkles,
-  Calendar,
   Pill,
   Stethoscope,
 } from "lucide-react";
-import { initialQueues } from "@/lib/mockData";
+import { api } from "@/lib/api";
 
 const availableTreatments = [
   "Laser Q-Switched Nd:YAG",
@@ -31,37 +30,45 @@ const availableTreatments = [
 export default function MedicalRecordPage() {
   const params = useParams();
   const router = useRouter();
-  const patientId = (params?.id as string) || "Q-001";
+  const appointmentId = (params?.id as string) || "";
 
-  // Match patient info or default
-  const patient = initialQueues.find((q) => q.id === patientId) || {
-    id: patientId,
-    queueNumber: "A-01",
-    patientName: "Clarissa Aurelia",
-    patientPhone: "0812-3456-7890",
-    doctorName: "dr. Nadia Sp.KK",
-    treatment: "Laser Rejuvenation & Glowing Facial",
-    time: "09:00 WIB",
-    status: "Konsultasi",
-    room: "Ruang Estetika 1",
-  };
+  // Appointment State
+  const [appointment, setAppointment] = useState<any>(null);
+  const [isLoadingAppointment, setIsLoadingAppointment] = useState(true);
 
-  // Form State
+  // Form State (Default kosong)
   const [formData, setFormData] = useState({
-    skinType: "Kombinasi (Cenderung Berminyak)",
-    allergies: "Tidak ada riwayat alergi obat/kosmetik",
-    complaints: "Kulit kusam di area T-zone, flek hitam ringan di pipi kanan setelah terpapar matahari.",
-    diagnosis: "Melasma Epidermal Ringan + Post-Inflammatory Hyperpigmentation",
-    selectedTreatments: ["Laser Q-Switched Nd:YAG", "Glowing Facial & Extraction"],
-    prescriptions: "- Krim Pagi (Niacinamide 4% + Sunscreen SPF 50 PA++++)\n- Krim Malam (Retinol 0.5% + Centella Asiatica)\n- Facial Wash Gentle Chamomile",
-    doctorNotes: "Hindari paparan sinar matahari langsung selama 3 hari. Gunakan tabir surya setiap 3 jam.",
-    nextFollowUp: "2026-10-31",
+    skinType: "Normal",
+    allergies: "",
+    complaints: "",
+    diagnosis: "",
+    selectedTreatments: [] as string[],
+    prescriptions: "",
+    doctorNotes: "",
   });
 
   // Validation & Backend Submission State
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+
+  // Fetch Appointment detail by ID
+  const loadAppointment = useCallback(async () => {
+    if (!appointmentId) return;
+    setIsLoadingAppointment(true);
+    try {
+      const data = await api<any>(`/appointments/${appointmentId}`);
+      setAppointment(data);
+    } catch (e) {
+      console.error("Gagal mengambil detail janji temu:", e);
+    } finally {
+      setIsLoadingAppointment(false);
+    }
+  }, [appointmentId]);
+
+  useEffect(() => {
+    loadAppointment();
+  }, [loadAppointment]);
 
   // Toggle treatment selection
   const handleToggleTreatment = (treatment: string) => {
@@ -106,24 +113,44 @@ export default function MedicalRecordPage() {
     setIsSubmitting(true);
 
     try {
-      // Simulate API call to backend /api/medical-records
+      // Formasi gabungan field sesuai spesifikasi BE (maks 1000 karakter per field)
+      const combinedDiagnosis = [
+        `Diagnosis: ${formData.diagnosis}`,
+        `Keluhan: ${formData.complaints}`,
+        formData.allergies ? `Alergi: ${formData.allergies}` : null,
+      ]
+        .filter(Boolean)
+        .join("\n")
+        .slice(0, 1000);
+
+      const combinedTreatment = formData.selectedTreatments.join(", ").slice(0, 1000);
+
+      const combinedPrescription = [
+        `Resep: ${formData.prescriptions}`,
+        formData.doctorNotes ? `Catatan: ${formData.doctorNotes}` : null,
+      ]
+        .filter(Boolean)
+        .join("\n")
+        .slice(0, 1000);
+
       const payload = {
-        patientId,
-        patientName: patient.patientName,
-        doctor: patient.doctorName,
-        ...formData,
-        submittedAt: new Date().toISOString(),
+        appointmentId,
+        skinType: formData.skinType.slice(0, 1000),
+        diagnosis: combinedDiagnosis,
+        treatment: combinedTreatment,
+        prescription: combinedPrescription,
       };
 
-      // Simulated network delay
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      await api("/medical-records", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
 
-      console.log("Rekam medis berhasil disimpan ke backend:", payload);
       setIsSubmitting(false);
       setSubmitSuccess(true);
     } catch (err) {
       setIsSubmitting(false);
-      alert("Gagal menyimpan data ke backend. Silakan coba kembali.");
+      alert("Gagal menyimpan rekam medis ke sistem. Silakan coba kembali.");
     }
   };
 
@@ -146,13 +173,13 @@ export default function MedicalRecordPage() {
 
       {/* Success Notification */}
       {submitSuccess && (
-        <div className="p-5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-between shadow-sm">
+        <div className="p-5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-between shadow-xs">
           <div className="flex items-center gap-3">
             <CheckCircle className="w-6 h-6 text-emerald-600 shrink-0" />
             <div>
               <h4 className="font-bold text-sm">Rekam Medis Berhasil Disimpan ke Sistem!</h4>
               <p className="text-xs text-emerald-700 mt-0.5">
-                Data klinis pasien {patient.patientName} telah disinkronkan ke rekam medis pusat dan bagian kasir/farmasi klinik.
+                Data rekam medis pasien telah tersimpan dan terhubung dengan sistem klinik.
               </p>
             </div>
           </div>
@@ -173,25 +200,41 @@ export default function MedicalRecordPage() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-xl font-extrabold text-gray-900">{patient.patientName}</h2>
-              <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-[#DB2777] text-white">
-                No. {patient.queueNumber}
-              </span>
+              <h2 className="text-xl font-extrabold text-gray-900">
+                {isLoadingAppointment
+                  ? "Memuat data pasien..."
+                  : appointment?.patientName || "Nama Pasien Tidak Ditemukan"}
+              </h2>
+              {appointment?.queueNumber && (
+                <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-[#DB2777] text-white">
+                  No. {appointment.queueNumber}
+                </span>
+              )}
             </div>
             <p className="text-xs text-gray-500 mt-0.5">
-              ID Pasien: <span className="font-semibold text-gray-700">{patient.id}</span> • Telp: {patient.patientPhone}
+              ID Janji Temu:{" "}
+              <span className="font-semibold text-gray-700">{appointmentId}</span> • Telp:{" "}
+              {appointment?.patientPhoneNumber || "-"}
             </p>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3 text-xs">
           <div className="px-3.5 py-2 rounded-xl bg-[#FFF9FA] border border-[#E2C0C8]">
-            <span className="text-gray-400 block text-[10px] uppercase font-semibold">Dokter Pemeriksa</span>
-            <span className="font-bold text-gray-800">{patient.doctorName}</span>
+            <span className="text-gray-400 block text-[10px] uppercase font-semibold">
+              Dokter Pemeriksa
+            </span>
+            <span className="font-bold text-gray-800">
+              {appointment?.doctorName || "-"}
+            </span>
           </div>
           <div className="px-3.5 py-2 rounded-xl bg-[#FFF9FA] border border-[#E2C0C8]">
-            <span className="text-gray-400 block text-[10px] uppercase font-semibold">Ruang Tindakan</span>
-            <span className="font-bold text-[#DB2777]">{patient.room}</span>
+            <span className="text-gray-400 block text-[10px] uppercase font-semibold">
+              Ruang / Layanan
+            </span>
+            <span className="font-bold text-[#DB2777]">
+              {appointment?.consultationType || appointment?.roomNumber || "Ruang Konsultasi"}
+            </span>
           </div>
         </div>
       </div>
@@ -215,16 +258,16 @@ export default function MedicalRecordPage() {
                 onChange={(e) => setFormData({ ...formData, skinType: e.target.value })}
                 className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-[#FFF9FA] border border-[#E2C0C8] text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#DB2777]/30 focus:border-[#DB2777]"
               >
-                <option>Normal</option>
-                <option>Kering (Dry Skin)</option>
-                <option>Berminyak (Oily Skin)</option>
-                <option>Kombinasi (Cenderung Berminyak)</option>
-                <option>Sensitif & Atopik</option>
+                <option value="Normal">Normal</option>
+                <option value="Kering (Dry Skin)">Kering (Dry Skin)</option>
+                <option value="Berminyak (Oily Skin)">Berminyak (Oily Skin)</option>
+                <option value="Kombinasi (Cenderung Berminyak)">Kombinasi (Cenderung Berminyak)</option>
+                <option value="Sensitif & Atopik">Sensitif & Atopik</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1 flex items-center gap-1">
+              <label className="flex items-center gap-1 text-xs font-semibold text-gray-700 mb-1">
                 <ShieldAlert className="w-3.5 h-3.5 text-amber-500" />
                 <span>Riwayat Alergi (Obat / Kosmetik)</span>
               </label>
@@ -306,13 +349,15 @@ export default function MedicalRecordPage() {
                     onClick={() => handleToggleTreatment(t)}
                     className={`p-3 rounded-xl text-xs font-semibold text-left transition-all border ${
                       isSelected
-                        ? "bg-[#DB2777] text-white border-[#DB2777] shadow-sm shadow-[#DB2777]/25"
+                        ? "bg-[#DB2777] text-white border-[#DB2777] shadow-xs shadow-[#DB2777]/25"
                         : "bg-[#FFF9FA] text-gray-700 border-[#E2C0C8] hover:bg-[#E2C0C8]/30 hover:border-[#DB2777]"
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <span className="line-clamp-2">{t}</span>
-                      {isSelected && <CheckCircle className="w-4 h-4 shrink-0 fill-white text-[#DB2777]" />}
+                      {isSelected && (
+                        <CheckCircle className="w-4 h-4 shrink-0 fill-white text-[#DB2777]" />
+                      )}
                     </div>
                   </button>
                 );
@@ -357,32 +402,17 @@ export default function MedicalRecordPage() {
               )}
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Catatan Khusus Edukasi Pasien
-                </label>
-                <textarea
-                  rows={2}
-                  value={formData.doctorNotes}
-                  onChange={(e) => setFormData({ ...formData, doctorNotes: e.target.value })}
-                  placeholder="Pantangan pasca-laser, anjuran kompres es, dll."
-                  className="w-full p-3 text-xs rounded-xl bg-[#FFF9FA] border border-[#E2C0C8] text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#DB2777]/30 focus:border-[#DB2777]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1 flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5 text-[#DB2777]" />
-                  <span>Jadwal Kontrol Ulang Berikutnya</span>
-                </label>
-                <input
-                  type="date"
-                  value={formData.nextFollowUp}
-                  onChange={(e) => setFormData({ ...formData, nextFollowUp: e.target.value })}
-                  className="w-full px-3.5 py-2 text-xs rounded-xl bg-[#FFF9FA] border border-[#E2C0C8] text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#DB2777]/30 focus:border-[#DB2777]"
-                />
-              </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-1">
+                Catatan Khusus Edukasi Pasien
+              </label>
+              <textarea
+                rows={4}
+                value={formData.doctorNotes}
+                onChange={(e) => setFormData({ ...formData, doctorNotes: e.target.value })}
+                placeholder="Pantangan pasca-laser, anjuran kompres es, dll."
+                className="w-full p-3.5 text-xs rounded-xl bg-[#FFF9FA] border border-[#E2C0C8] text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#DB2777]/30 focus:border-[#DB2777]"
+              />
             </div>
           </div>
         </div>
@@ -406,7 +436,7 @@ export default function MedicalRecordPage() {
             ) : (
               <>
                 <Save className="w-4 h-4" />
-                <span>Simpan Rekam Medis & Selesaikan Sesi</span>
+                <span>Simpan Rekam Medis</span>
               </>
             )}
           </button>

@@ -1,5 +1,15 @@
+<<<<<<< HEAD
 // File: C:\DATA INDAH\project-klinik-kecantikan\app\page.tsx
 import * as entry from '../../../app/page.js'
+=======
+<<<<<<<< HEAD:.next/types/app/admin/schedules/page.ts
+// File: C:\DATA INDAH\project-klinik-kecantikan\app\admin\schedules\page.tsx
+import * as entry from '../../../../../app/admin/schedules/page.js'
+========
+// File: C:\ProjekIndustri\project-klinik-kecantikan\app\page.tsx
+import * as entry from '../../../app/page.js'
+>>>>>>>> eb13c06 (Sudah terhubung ke BE dan DB):.next/types/app/page.ts
+>>>>>>> eb13c06 (Sudah terhubung ke BE dan DB)
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
 type TEntry = typeof import('../../../app/page.js')

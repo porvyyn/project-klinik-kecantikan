@@ -3,12 +3,13 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Sparkles, ShieldCheck, Stethoscope, Lock, Mail, ArrowRight, AlertCircle } from "lucide-react";
+import { login, logout } from "@/lib/auth";
 
 export default function LoginPage() {
   const router = useRouter();
   const [role, setRole] = useState<"admin" | "doctor">("admin");
-  const [email, setEmail] = useState("admin@veloura.com");
-  const [password, setPassword] = useState("password123");
+  const [email, setEmail] = useState("admin@klinik.com");
+  const [password, setPassword] = useState("Admin@123");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -16,15 +17,15 @@ export default function LoginPage() {
     setRole(newRole);
     setError(null);
     if (newRole === "admin") {
-      setEmail("admin@veloura.com");
-      setPassword("password123");
+      setEmail("admin@klinik.com");
+      setPassword("Admin@123");
     } else {
-      setEmail("dr.nadia@veloura.com");
-      setPassword("dokter123");
+      setEmail("dr.alana@klinik.com");
+      setPassword("Doctor@123");
     }
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -47,15 +48,20 @@ export default function LoginPage() {
     setLoading(true);
 
     // Simulate authentication
-    setTimeout(() => {
-      setLoading(false);
-      localStorage.setItem("auth_role", role);
-      if (role === "admin") {
-        router.push("/admin/dashboard");
-      } else {
-        router.push("/doctor/dashboard");
+    try {
+      const user = await login(email, password);
+      const actual = user.role === "Admin" ? "admin" : "doctor";
+      if (actual !== role) {
+        logout(); // import juga logout dari "@/lib/auth"
+        setError(`Akun ini terdaftar sebagai ${user.role}. Pilih peran yang sesuai.`);
+        setLoading(false);
+        return;
       }
-    }, 700);
+      router.push(actual === "admin" ? "/admin/dashboard" : "/doctor/dashboard");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Login gagal.");
+      setLoading(false);
+    }
   };
 
   return (
@@ -129,7 +135,7 @@ export default function LoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="nama@veloura.com"
+                placeholder="nama@klinik.com"
                 className="w-full pl-10 pr-4 py-2.5 text-xs rounded-xl bg-[#FFF9FA] border border-[#E2C0C8] text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#DB2777]/30 focus:border-[#DB2777] transition-all"
                 required
               />

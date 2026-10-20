@@ -1,14 +1,31 @@
 {
   "pages": {
+<<<<<<< HEAD
     "/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/page.js"
+=======
+    "/admin/queue/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/admin/queue/page.js"
+    ],
+    "/admin/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/admin/layout.js"
+>>>>>>> eb13c06 (Sudah terhubung ke BE dan DB)
     ],
     "/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/layout.js"
+    ],
+    "/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/page.js"
     ],
     "/login/page": [
       "static/chunks/webpack.js",
@@ -19,6 +36,7 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/admin/dashboard/page.js"
+<<<<<<< HEAD
     ],
     "/admin/layout": [
       "static/chunks/webpack.js",
@@ -46,6 +64,8 @@
       "static/chunks/main-app.js",
       "static/css/app/doctor/layout.css",
       "static/chunks/app/doctor/layout.js"
+=======
+>>>>>>> eb13c06 (Sudah terhubung ke BE dan DB)
     ]
   }
 }

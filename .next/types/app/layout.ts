@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 // File: C:\DATA INDAH\project-klinik-kecantikan\app\layout.tsx
+=======
+// File: C:\ProjekIndustri\project-klinik-kecantikan\app\layout.tsx
+>>>>>>> eb13c06 (Sudah terhubung ke BE dan DB)
 import * as entry from '../../../app/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

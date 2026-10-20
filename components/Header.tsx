@@ -14,6 +14,7 @@ import {
   X,
   Sparkles,
 } from "lucide-react";
+import { getUser } from "@/lib/auth";
 
 interface HeaderProps {
   title: string;
@@ -93,8 +94,31 @@ const initialDoctorNotifications: NotificationItem[] = [
 ];
 
 export function Header({ title, subtitle, role }: HeaderProps) {
-  const userName = role === "admin" ? "Siti Sarah (Admin Head)" : "dr. Nadia Putri, Sp.KK";
-  const userInitial = role === "admin" ? "SS" : "NP";
+  const [userName, setUserName] = useState<string>("");
+
+  useEffect(() => {
+    const user = getUser();
+    if (user?.fullName) {
+      setUserName(user.fullName);
+    } else {
+      setUserName(
+        role === "admin" ? "Siti Sarah (Admin Head)" : "dr. Nadia Putri, Sp.KK"
+      );
+    }
+  }, [role]); 
+
+  // Generate inisial nama secara otomatis
+  const userInitial = userName
+    ? userName
+        .split(" ")
+        .map((n) => n[0])
+        .filter(Boolean)
+        .slice(0, 2)
+        .join("")
+        .toUpperCase()
+    : role === "admin"
+    ? "SS"
+    : "NP";
 
   const [notifications, setNotifications] = useState<NotificationItem[]>(
     role === "admin" ? initialAdminNotifications : initialDoctorNotifications

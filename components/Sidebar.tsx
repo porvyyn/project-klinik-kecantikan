@@ -2,12 +2,11 @@
 
 import React from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   CalendarDays,
   Users2,
-  FileHeart,
   LogOut,
   Sparkles,
   ShieldCheck,
@@ -15,6 +14,7 @@ import {
   Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { logout } from "@/lib/auth";
 
 interface SidebarProps {
   role: "admin" | "doctor";
@@ -29,7 +29,6 @@ interface NavItem {
 
 export function Sidebar({ role }: SidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
 
   const adminNavItems: NavItem[] = [
     {
@@ -63,27 +62,22 @@ export function Sidebar({ role }: SidebarProps) {
       icon: Clock,
       badge: "3 Menunggu",
     },
-    {
-      title: "Rekam Medis Pasien",
-      href: "/doctor/medical-record/Q-001",
-      icon: FileHeart,
-      badge: "Aktif",
-    },
   ];
 
   const navItems = role === "admin" ? adminNavItems : doctorNavItems;
 
   const handleLogout = () => {
-    // Clear session or token in localStorage if any
-    localStorage.removeItem("auth_role");
-    router.push("/login");
+    logout();
   };
 
   return (
-    <aside className="w-64 bg-white border-r border-[#E2C0C8] flex flex-col h-screen sticky top-0 select-none shadow-sm z-30">
+    <aside className="w-64 bg-white border-r border-[#E2C0C8] flex flex-col h-screen sticky top-0 select-none shadow-xs z-30">
       {/* Brand Logo & Header */}
       <div className="p-6 border-b border-[#E2C0C8]/60 bg-gradient-to-b from-[#FFF9FA] to-white">
-        <Link href={role === "admin" ? "/admin/dashboard" : "/doctor/dashboard"} className="flex items-center gap-3 group">
+        <Link
+          href={role === "admin" ? "/admin/dashboard" : "/doctor/dashboard"}
+          className="flex items-center gap-3 group"
+        >
           <div className="w-10 h-10 rounded-xl bg-[#DB2777] flex items-center justify-center text-white shadow-md shadow-[#DB2777]/30 transition-transform group-hover:scale-105 duration-200">
             <Sparkles className="w-5 h-5 animate-pulse" />
           </div>
@@ -119,7 +113,10 @@ export function Sidebar({ role }: SidebarProps) {
           Menu Navigasi
         </p>
         {navItems.map((item) => {
-          const isActive = pathname === item.href || (item.href.includes("#") && pathname.startsWith(item.href.split("#")[0]));
+          const isActive =
+            pathname === item.href ||
+            (item.href.includes("#") &&
+              pathname.startsWith(item.href.split("#")[0]));
           const Icon = item.icon;
 
           return (
@@ -137,7 +134,9 @@ export function Sidebar({ role }: SidebarProps) {
                 <Icon
                   className={cn(
                     "w-5 h-5 transition-transform group-hover:scale-110",
-                    isActive ? "text-white" : "text-gray-500 group-hover:text-[#DB2777]"
+                    isActive
+                      ? "text-white"
+                      : "text-gray-500 group-hover:text-[#DB2777]"
                   )}
                 />
                 <span>{item.title}</span>
@@ -164,7 +163,7 @@ export function Sidebar({ role }: SidebarProps) {
       <div className="p-4 border-t border-[#E2C0C8]/60 bg-gradient-to-t from-[#FFF9FA] to-white">
         <button
           onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-[#E2C0C8] text-gray-700 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 font-medium text-sm transition-all duration-200"
+          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-[#E2C0C8] text-gray-700 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 font-medium text-sm transition-all duration-200 cursor-pointer"
         >
           <LogOut className="w-4 h-4" />
           <span>Logout</span>

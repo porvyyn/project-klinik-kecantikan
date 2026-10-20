@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
-import { Volume2, Play, CheckCircle, Clock, Sparkles } from "lucide-react";
+import React, { useState, useEffect, useCallback } from "react";
+import { Volume2, Play, CheckCircle, Clock } from "lucide-react";
 import { DataTable, Column } from "@/components/DataTable";
-import { initialQueues, QueueItem } from "@/lib/mockData";
+import { QueueItem } from "@/lib/mockData";
+import { api } from "@/lib/api";
 
 // Chime notification sound using browser Web Audio API
 const playChimeSound = (): Promise<void> => {
@@ -87,15 +88,64 @@ const speakAnnouncement = (text: string) => {
 };
 
 export default function AdminQueuePage() {
-  const [queues, setQueues] = useState<QueueItem[]>(initialQueues);
+  const [queues, setQueues] = useState<QueueItem[]>([]);
   const [activeCallMessage, setActiveCallMessage] = useState<string | null>(null);
   const [callingId, setCallingId] = useState<string | null>(null);
 
-  // Status updates
-  const handleUpdateStatus = (id: string, newStatus: QueueItem["status"]) => {
-    setQueues((prev) =>
-      prev.map((q) => (q.id === id ? { ...q, status: newStatus } : q))
-    );
+  // Fetch queue data from backend API
+  const loadQueue = useCallback(async () => {
+    try {
+      const data = await api<any>("/appointments/live-queue");
+      setQueues(
+        data.queueList.map((a: any) => ({
+          id: a.id,
+          queueNumber: a.queueNumber,
+          patientName: a.patientName,
+          patientPhone: a.patientPhoneNumber,
+          doctorName: a.doctorName,
+          treatment: a.consultationType,
+          time: a.scheduleTime,
+          room: a.roomNumber,
+          status:
+            a.status === "In_Consultation"
+              ? "Konsultasi"
+              : a.status === "Completed"
+              ? "Selesai"
+              : a.status === "Cancelled"
+              ? "Batal"
+              : "Menunggu",
+        }))
+      );
+    } catch (e) {
+      console.error("Gagal mengambil data antrean:", e);
+    }
+  }, []);
+
+  // Poll data every 10 seconds
+  useEffect(() => {
+    loadQueue();
+    const t = setInterval(loadQueue, 10000);
+    return () => clearInterval(t);
+  }, [loadQueue]);
+
+  // Update status queue via API
+  const handleUpdateStatus = async (id: string, s: QueueItem["status"]) => {
+    const map: Record<string, string> = {
+      Menunggu: "Confirmed",
+      Konsultasi: "In_Consultation",
+      Selesai: "Completed",
+      Batal: "Cancelled",
+    };
+
+    try {
+      await api(`/appointments/${id}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ status: map[s] }),
+      });
+      await loadQueue();
+    } catch (e) {
+      console.error("Gagal memperbarui status antrean:", e);
+    }
   };
 
   // Announce / Call patient with Chime & Speech Synthesis
@@ -121,7 +171,7 @@ export default function AdminQueuePage() {
       header: "No. Antrean",
       accessorKey: "queueNumber",
       cell: (item) => (
-        <div className="w-12 h-10 rounded-xl bg-gradient-to-br from-[#DB2777] to-[#F472B6] text-white flex items-center justify-center font-extrabold text-sm shadow-sm">
+        <div className="w-12 h-10 rounded-xl bg-gradient-to-br from-[#DB2777] to-[#F472B6] text-white flex items-center justify-center font-extrabold text-sm shadow-xs">
           {item.queueNumber}
         </div>
       ),
@@ -141,7 +191,9 @@ export default function AdminQueuePage() {
       cell: (item) => (
         <div>
           <p className="font-semibold text-gray-800 text-xs">{item.treatment}</p>
-          <p className="text-[11px] text-[#DB2777] font-medium">{item.doctorName} • {item.room}</p>
+          <p className="text-[11px] text-[#DB2777] font-medium">
+            {item.doctorName} • {item.room}
+          </p>
         </div>
       ),
     },
